@@ -1,0 +1,28 @@
+For Customers.csv —
+Categories are the types of food customers are donating.
+The integer is a bit-packed value defined by the following positional fields:
+Bit 0: Raw Meat
+Bit 1: Dairy
+Bit 2: Seafood
+Bit 3: Hot Prepared
+Bit 4: Cold Prepared
+Bit 5: Frozen
+(e.g. 0b000101 —> customer is donating food that is of Raw Meat and Seafood categories)
+
+PickupAt and TimeZoneId are critical components for determining the exact date & time of pickup.
+PickupAt format is defined by ISO 8601
+TimeZoneId value is an IANA zone information, which is useful in accounting for timezones and daylight savings. You can expect to use “America/Los_Angeles” for this value.
+
+=============================================================================
+
+For Recipients.csv —
+Restrictions follow the same definition of positional fields as the Customer's Categories defined above.
+Restrictions are categories that recipients CANNOT accept.
+(e.g. 0b110000 —> recipient CANNOT accept Cold Prepared and Frozen food categories)
+
+Notice that there are Columns for days of the week in Recipients.csv. Those are the stated hours of operations.
+Each rows for each of the days of the week is a bit-packed value defined by the following positional fields:
+Bit 0: 8-9AM
+Bit 1: 9-10AM
+…
+Bit 15: 11-12AM
