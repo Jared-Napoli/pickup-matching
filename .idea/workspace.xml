@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="47cd7aac-b3e5-431a-9888-32fdb96343f4" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/src/Recipient.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Customer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pickup-matching.iml" beforeDir="false" afterPath="$PROJECT_DIR$/pickup-matching.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PickupMatching.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/PickupMatching.kt" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
@@ -27,11 +26,20 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="Customer.kt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Customer.kt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="60">
+              <caret line="4" column="17" selection-start-line="4" selection-start-column="17" selection-end-line="4" selection-end-column="17" />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="PickupMatching.kt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/PickupMatching.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="75">
-              <caret line="5" column="120" selection-start-line="5" selection-start-column="120" selection-end-line="5" selection-end-column="120" />
+            <state relative-caret-position="29">
+              <caret line="20" column="56" lean-forward="true" selection-start-line="20" selection-start-column="56" selection-end-line="20" selection-end-column="56" />
               <folding>
                 <element signature="e#0#55#1" expanded="true" />
               </folding>
@@ -42,8 +50,8 @@
       <file leaf-file-name="PickupMatchingKtTest.kt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test/PickupMatchingKtTest.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="358">
-              <caret line="29" column="62" selection-start-line="29" selection-start-column="62" selection-end-line="29" selection-end-column="62" />
+            <state relative-caret-position="225">
+              <caret line="15" column="73" lean-forward="true" selection-start-line="15" selection-start-column="73" selection-end-line="15" selection-end-column="73" />
               <folding>
                 <element signature="e#0#72#0" expanded="true" />
               </folding>
@@ -54,8 +62,8 @@
       <file leaf-file-name="Recipient.kt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Recipient.kt">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret column="11" selection-start-column="11" selection-end-column="11" />
+            <state relative-caret-position="15">
+              <caret line="1" column="7" lean-forward="true" selection-start-line="1" selection-start-column="7" selection-end-line="10" selection-end-column="25" />
             </state>
           </provider>
         </entry>
@@ -66,8 +74,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Kotlin File" />
-        <option value="Kotlin Class" />
         <option value="JUnit4 Test Class" />
+        <option value="Kotlin Class" />
       </list>
     </option>
   </component>
@@ -81,6 +89,7 @@
         <option value="$PROJECT_DIR$/test/PickupMatchingKtTest.java" />
         <option value="$PROJECT_DIR$/test/PickupMatchingKtTest.kt" />
         <option value="$PROJECT_DIR$/src/PickupMatching.kt" />
+        <option value="$PROJECT_DIR$/src/Customer.kt" />
         <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
@@ -104,6 +113,11 @@
             <path>
               <item name="pickup-matching" type="b2602c69:ProjectViewProjectNode" />
               <item name="pickup-matching" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="pickup-matching" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pickup-matching" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -284,6 +298,9 @@
     <history-entry file="PickupMatchingKtTest - 2018.06.01 at 17h 02m 57s.xml">
       <configuration name="PickupMatchingKtTest" configurationId="JUnit" />
     </history-entry>
+    <history-entry file="PickupMatchingKtTest - 2018.06.01 at 17h 19m 02s.xml">
+      <configuration name="PickupMatchingKtTest" configurationId="JUnit" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
     <frame x="20" y="43" width="1420" height="857" extended-state="0" />
@@ -320,13 +337,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/Recipient.kt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="11" selection-start-column="11" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test/PickupMatchingKtTest.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
@@ -336,18 +346,32 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test/PickupMatchingKtTest.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="358">
-          <caret line="29" column="62" selection-start-line="29" selection-start-column="62" selection-end-line="29" selection-end-column="62" />
+        <state relative-caret-position="225">
+          <caret line="15" column="73" lean-forward="true" selection-start-line="15" selection-start-column="73" selection-end-line="15" selection-end-column="73" />
           <folding>
             <element signature="e#0#72#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/Recipient.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="1" column="7" lean-forward="true" selection-start-line="1" selection-start-column="7" selection-end-line="10" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Customer.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="17" selection-start-line="4" selection-start-column="17" selection-end-line="4" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/PickupMatching.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="120" selection-start-line="5" selection-start-column="120" selection-end-line="5" selection-end-column="120" />
+        <state relative-caret-position="29">
+          <caret line="20" column="56" lean-forward="true" selection-start-line="20" selection-start-column="56" selection-end-line="20" selection-end-column="56" />
           <folding>
             <element signature="e#0#55#1" expanded="true" />
           </folding>
