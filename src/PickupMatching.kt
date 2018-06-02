@@ -61,16 +61,27 @@ fun main(args: Array<String>) {
 
     if(debug) println(reqCustHeaderIndices.toString())
     line = fileReader.readLine()
-    lineTokens = line.split(",")
-    val cust: Customer = Customer(
-            lineTokens[reqCustHeaderIndices.get("Latitude")!!].toDouble(),
-            lineTokens[reqCustHeaderIndices.get("Longitude")!!].toDouble(),
-            lineTokens[reqCustHeaderIndices.get("Categories")!!].toShort(),
-            lineTokens[reqCustHeaderIndices.get("PickupAt")!!],
-            lineTokens[reqCustHeaderIndices.get("TimeZoneId")!!]
-            )
+    while(line != null) {
+        lineTokens = line.split(",")
+        val cust = Customer(
+                lineTokens[reqCustHeaderIndices.get("Latitude")!!].toDouble(),
+                lineTokens[reqCustHeaderIndices.get("Longitude")!!].toDouble(),
+                lineTokens[reqCustHeaderIndices.get("Categories")!!].toShort(),
+                lineTokens[reqCustHeaderIndices.get("PickupAt")!!],
+                lineTokens[reqCustHeaderIndices.get("TimeZoneId")!!]
+        )
+        if (debug) println(cust.toString())
 
-    if(debug) println(cust.toString())
+        var distance: Double
+        for(recip in recipients) {
+
+            //get distance
+            distance = distance(cust.latitude, cust.longitude, recip.latitude, recip.longitude)
+            if(debug) println(distance)
+        }
+
+        line = fileReader.readLine()
+    }
 
 
     if(debug) println("done")
@@ -88,4 +99,29 @@ fun setIndices(headerTokens: List<String>, reqHeaderMap: MutableMap<String, Int>
     for(key in reqHeaderMap.keys) {
         reqHeaderMap[key] = headerTokens.indexOf(key)
     }
+}
+
+
+// finds the distance between two coordinates, returns in miles
+// adapted from https://dzone.com/articles/distance-calculation-using-3
+fun distance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+    val theta = lon1 - lon2
+    var dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+            Math.cos(deg2rad(theta))
+    dist = Math.acos(dist)
+    dist = rad2deg(dist)
+    dist = dist * 60.0 * 1.1515
+    return dist
+}
+
+// converts degrees to radians
+// adapted from https://dzone.com/articles/distance-calculation-using-3
+fun deg2rad(deg: Double): Double {
+    return deg * Math.PI / 180.0
+}
+
+// converts radians to degrees
+// adapted from https://dzone.com/articles/distance-calculation-using-3
+fun rad2deg(rad: Double): Double {
+    return rad * 180.0 / Math.PI
 }
