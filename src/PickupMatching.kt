@@ -1,6 +1,11 @@
 import java.io.BufferedReader
 import java.io.FileReader
 import java.math.BigInteger
+import java.time.DayOfWeek
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.util.*
 
 
 val reqRecipHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude" to 0, "Restrictions" to 0,
@@ -8,7 +13,8 @@ val reqRecipHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitud
 val reqCustHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude" to 0, "Categories" to 0, "PickupAt" to 0,
         "TimeZoneId" to 0)
 var recipients = mutableListOf<Recipient>()
-var debug: Boolean = true
+var debug: Boolean = false
+const val DEFAULT_TIMEZONE = "America/Los_Angeles"
 
 fun main(args: Array<String>) {
     println("Reading from Recipients.csv:")
@@ -30,13 +36,15 @@ fun main(args: Array<String>) {
                 lineTokens[reqRecipHeaderIndices.get("Latitude")!!].toDouble(),
                 lineTokens[reqRecipHeaderIndices.get("Longitude")!!].toDouble(),
                 lineTokens[reqRecipHeaderIndices.get("Restrictions")!!].toShort(),
-                lineTokens[reqRecipHeaderIndices.get("Sunday")!!].toInt(),
-                lineTokens[reqRecipHeaderIndices.get("Monday")!!].toInt(),
-                lineTokens[reqRecipHeaderIndices.get("Tuesday")!!].toInt(),
-                lineTokens[reqRecipHeaderIndices.get("Wednesday")!!].toInt(),
-                lineTokens[reqRecipHeaderIndices.get("Thursday")!!].toInt(),
-                lineTokens[reqRecipHeaderIndices.get("Friday")!!].toInt(),
-                lineTokens[reqRecipHeaderIndices.get("Saturday")!!].toInt()
+                arrayOf(
+                        lineTokens[reqRecipHeaderIndices.get("Monday")!!].toInt(),
+                        lineTokens[reqRecipHeaderIndices.get("Tuesday")!!].toInt(),
+                        lineTokens[reqRecipHeaderIndices.get("Wednesday")!!].toInt(),
+                        lineTokens[reqRecipHeaderIndices.get("Thursday")!!].toInt(),
+                        lineTokens[reqRecipHeaderIndices.get("Friday")!!].toInt(),
+                        lineTokens[reqRecipHeaderIndices.get("Saturday")!!].toInt(),
+                        lineTokens[reqRecipHeaderIndices.get("Sunday")!!].toInt()
+                )
         ))
         line = fileReader.readLine()
     }
@@ -81,17 +89,15 @@ fun main(args: Array<String>) {
             if(debug) println(distance)
 
             // get count of food matches
-            println(getFoodMatchCount(cust.categories, recip.restrictions))
-        }
+            getFoodMatchCount(cust.categories, recip.restrictions)
 
+            // get pickup availabilities
+            getPickupAvailability(cust, recip)
+        }
         line = fileReader.readLine()
     }
 
-
-    val x: Short = 14
-    val y: Short = 15
-    println(getFoodMatchCount(x, y))
-    if(debug) println("done")
+    if(!debug) println("done")
 }
 
 fun hasRequiredHeader(headerTokens: List<String>, reqHeaders: MutableMap<String, Int>): Boolean {
@@ -150,4 +156,16 @@ fun getFoodMatchCount(custCategories: Short, recipRestrictions: Short): Byte {
 // tests the Integer int's bit at position pos, returns true if set, false if not
 fun testBit(int: Int, pos: Int): Boolean {
     return int and (1 shl pos) !== 0
+}
+
+
+// DAyofWeek indices are off by one
+// may need to catch array out of bounds
+fun getPickupAvailability(cust: Customer, recip: Recipient): Boolean {
+    var pickupTime = LocalDateTime.parse(cust.pickupAt.substring(0, 19))
+    var custZoneId = ZoneId.of(cust.timeZoneId)
+    var defaultZoneID = ZoneId.of(DEFAULT_TIMEZONE)
+    var zonedDateTime: ZonedDateTime = pickupTime.atZone(custZoneId)
+    var adjustedDateTime:  ZonedDateTime =zonedDateTime.withZoneSameInstant(defaultZoneID)
+    return testBit(recip.weekdays[adjustedDateTime.dayOfWeek.value - 1], adjustedDateTime.hour - 8)
 }
