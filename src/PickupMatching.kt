@@ -1,3 +1,4 @@
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match
 import java.io.BufferedReader
 import java.io.FileReader
 import java.math.BigInteger
@@ -15,6 +16,7 @@ val reqCustHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude
 var recipients = mutableListOf<Recipient>()
 var debug: Boolean = false
 const val DEFAULT_TIMEZONE = "America/Los_Angeles"
+var scores = mutableListOf<MatchScore>()
 
 fun main(args: Array<String>) {
     println("Reading from Recipients.csv:")
@@ -82,6 +84,9 @@ fun main(args: Array<String>) {
         if (debug) println(cust.toString())
 
         var distance: Double
+        var recipIndex = 0
+        var foodMatchCount: Byte
+        var pickupAvailable: Boolean
         for(recip in recipients) {
 
             //get distance
@@ -89,12 +94,20 @@ fun main(args: Array<String>) {
             if(debug) println(distance)
 
             // get count of food matches
-            getFoodMatchCount(cust.categories, recip.restrictions)
+            foodMatchCount = getFoodMatchCount(cust.categories, recip.restrictions)
 
             // get pickup availabilities
-            getPickupAvailability(cust, recip)
+            pickupAvailable =getPickupAvailability(cust, recip)
+
+            if(distance < 10.0 && pickupAvailable && foodMatchCount > 0) {
+                scores.add(MatchScore(recipIndex, foodMatchCount * 10.0 - distance))
+            }
+            recipIndex++
         }
         line = fileReader.readLine()
+        val sorted = scores.sortedWith(compareByDescending({it.score}))
+        println(sorted.toString())
+        scores.clear()
     }
 
     if(!debug) println("done")
