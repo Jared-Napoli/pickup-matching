@@ -1,5 +1,6 @@
 import java.io.BufferedReader
 import java.io.FileReader
+import java.math.BigInteger
 
 
 val reqRecipHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude" to 0, "Restrictions" to 0,
@@ -78,12 +79,18 @@ fun main(args: Array<String>) {
             //get distance
             distance = distance(cust.latitude, cust.longitude, recip.latitude, recip.longitude)
             if(debug) println(distance)
+
+            // get count of food matches
+            println(getFoodMatchCount(cust.categories, recip.restrictions))
         }
 
         line = fileReader.readLine()
     }
 
 
+    val x: Short = 14
+    val y: Short = 15
+    println(getFoodMatchCount(x, y))
     if(debug) println("done")
 }
 
@@ -124,4 +131,23 @@ fun deg2rad(deg: Double): Double {
 // adapted from https://dzone.com/articles/distance-calculation-using-3
 fun rad2deg(rad: Double): Double {
     return rad * 180.0 / Math.PI
+}
+
+// returns the number of food items that match for a customer and recipient
+fun getFoodMatchCount(custCategories: Short, recipRestrictions: Short): Byte {
+    var count: Byte = 0
+    var categories = custCategories.toInt()
+    var restrictions = recipRestrictions.toInt()
+
+    for(i in 0..7) {
+        if(testBit(categories, i) and !(testBit(restrictions, i))) {
+            count++
+        }
+    }
+    return count
+}
+
+// tests the Integer int's bit at position pos, returns true if set, false if not
+fun testBit(int: Int, pos: Int): Boolean {
+    return int and (1 shl pos) !== 0
 }
