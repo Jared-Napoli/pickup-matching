@@ -4,6 +4,8 @@ import java.io.FileReader
 
 val reqRecipHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude" to 0, "Restrictions" to 0,
         "Sunday" to 0, "Monday" to 0, "Tuesday" to 0, "Wednesday" to 0, "Thursday" to 0, "Friday" to 0, "Saturday" to 0)
+val reqCustHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude" to 0, "Categories" to 0, "PickupAt" to 0,
+        "TimeZoneId" to 0)
 var recipients = mutableListOf<Recipient>()
 var debug: Boolean = true
 
@@ -38,10 +40,38 @@ fun main(args: Array<String>) {
         line = fileReader.readLine()
     }
     if(debug) {
+        println()
+        println("printing Recipients")
         for(recip in recipients) {
             println(recip.toString())
         }
+        println()
+        println()
     }
+
+    println("Reading from 'Customers.csv'")
+    fileReader = BufferedReader(FileReader("Customers.csv"))
+
+    val custHeader = fileReader.readLine()
+    val custHeaderTokens = custHeader.split(",")
+
+    if(debug) println(hasRequiredHeader(custHeaderTokens, reqCustHeaderIndices))
+
+    setIndices(custHeaderTokens, reqCustHeaderIndices)
+
+    if(debug) println(reqCustHeaderIndices.toString())
+    line = fileReader.readLine()
+    lineTokens = line.split(",")
+    val cust: Customer = Customer(
+            lineTokens[reqCustHeaderIndices.get("Latitude")!!].toDouble(),
+            lineTokens[reqCustHeaderIndices.get("Longitude")!!].toDouble(),
+            lineTokens[reqCustHeaderIndices.get("Categories")!!].toShort(),
+            lineTokens[reqCustHeaderIndices.get("PickupAt")!!],
+            lineTokens[reqCustHeaderIndices.get("TimeZoneId")!!]
+            )
+
+    if(debug) println(cust.toString())
+
 
     if(debug) println("done")
 }
