@@ -1,3 +1,4 @@
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match
 import java.io.BufferedReader
 import java.io.FileReader
 import java.math.BigInteger
@@ -6,6 +7,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
+import java.io.FileWriter
 
 
 val reqRecipHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude" to 0, "Restrictions" to 0,
@@ -15,6 +17,7 @@ val reqCustHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude
 var recipients = mutableListOf<Recipient>()
 var debug: Boolean = false
 const val DEFAULT_TIMEZONE = "America/Los_Angeles"
+var scores = mutableListOf<MatchScore>()
 
 fun main(args: Array<String>) {
     println("Reading from Recipients.csv:")
@@ -70,6 +73,9 @@ fun main(args: Array<String>) {
 
     if(debug) println(reqCustHeaderIndices.toString())
     line = fileReader.readLine()
+    var custIndex = 0
+    var fileWriter = FileWriter("MatchScores.csv")
+    fileWriter.appendln("CustCSVIndex,TopMatchCSVIndex,TopMatchScore,2ndBestMatchCSVIndex,2ndBestMatchScore,...")
     while(line != null) {
         lineTokens = line.split(",")
         val cust = Customer(
@@ -82,6 +88,9 @@ fun main(args: Array<String>) {
         if (debug) println(cust.toString())
 
         var distance: Double
+        var recipIndex = 0
+        var foodMatchCount: Byte
+        var pickupAvailable: Boolean
         for(recip in recipients) {
 
             //get distance
@@ -89,15 +98,30 @@ fun main(args: Array<String>) {
             if(debug) println(distance)
 
             // get count of food matches
-            getFoodMatchCount(cust.categories, recip.restrictions)
+            foodMatchCount = getFoodMatchCount(cust.categories, recip.restrictions)
 
             // get pickup availabilities
-            getPickupAvailability(cust, recip)
+            pickupAvailable =getPickupAvailability(cust, recip)
+
+            if(distance < 10.0 && pickupAvailable && foodMatchCount > 0) {
+                scores.add(MatchScore(recipIndex, (foodMatchCount * 10.0 - distance)))
+            }
+            recipIndex++
         }
         line = fileReader.readLine()
+        val sorted = scores.sortedWith(compareByDescending({it.score}))
+//        println(sorted.toString())
+        fileWriter.append("${custIndex}")
+        for(match in sorted) {
+            fileWriter.append(",${match.csvIndex},${match.score}")
+        }
+        fileWriter.append("\n")
+        custIndex++
+        scores.clear()
     }
-
-    if(!debug) println("done")
+    fileWriter.close()
+    fileReader.close()
+    println("done")
 }
 
 fun hasRequiredHeader(headerTokens: List<String>, reqHeaders: MutableMap<String, Int>): Boolean {
