@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
+import java.io.FileWriter
 
 
 val reqRecipHeaderIndices = mutableMapOf<String, Int>("Latitude" to 0, "Longitude" to 0, "Restrictions" to 0,
@@ -72,6 +73,9 @@ fun main(args: Array<String>) {
 
     if(debug) println(reqCustHeaderIndices.toString())
     line = fileReader.readLine()
+    var custIndex = 0
+    var fileWriter = FileWriter("MatchScores.csv")
+    fileWriter.appendln("CustCSVIndex,TopMatchCSVIndex,TopMatchScore,2ndBestMatchCSVIndex,2ndBestMatchScore,...")
     while(line != null) {
         lineTokens = line.split(",")
         val cust = Customer(
@@ -100,17 +104,24 @@ fun main(args: Array<String>) {
             pickupAvailable =getPickupAvailability(cust, recip)
 
             if(distance < 10.0 && pickupAvailable && foodMatchCount > 0) {
-                scores.add(MatchScore(recipIndex, foodMatchCount * 10.0 - distance))
+                scores.add(MatchScore(recipIndex, (foodMatchCount * 10.0 - distance)))
             }
             recipIndex++
         }
         line = fileReader.readLine()
         val sorted = scores.sortedWith(compareByDescending({it.score}))
-        println(sorted.toString())
+//        println(sorted.toString())
+        fileWriter.append("${custIndex}")
+        for(match in sorted) {
+            fileWriter.append(",${match.csvIndex},${match.score}")
+        }
+        fileWriter.append("\n")
+        custIndex++
         scores.clear()
     }
-
-    if(!debug) println("done")
+    fileWriter.close()
+    fileReader.close()
+    println("done")
 }
 
 fun hasRequiredHeader(headerTokens: List<String>, reqHeaders: MutableMap<String, Int>): Boolean {
