@@ -1,113 +1,125 @@
-import java.io.BufferedReader
-import java.io.FileReader
+import java.io.*
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.io.FileWriter
 
 
 val reqRecipHeaderIndices = mutableMapOf(
-        "Latitude" to 0,
-        "Longitude" to 0,
-        "Restrictions" to 0,
-        "Sunday" to 0,
-        "Monday" to 0,
-        "Tuesday" to 0,
-        "Wednesday" to 0,
-        "Thursday" to 0,
-        "Friday" to 0,
-        "Saturday" to 0
+        "Latitude" to -1,
+        "Longitude" to -1,
+        "Restrictions" to -1,
+        "Sunday" to -1,
+        "Monday" to -1,
+        "Tuesday" to -1,
+        "Wednesday" to -1,
+        "Thursday" to -1,
+        "Friday" to -1,
+        "Saturday" to -1
     )
 
 val reqCustHeaderIndices = mutableMapOf(
-        "Latitude" to 0,
-        "Longitude" to 0,
-        "Categories" to 0,
-        "PickupAt" to 0,
-        "TimeZoneId" to 0
+        "Latitude" to -1,
+        "Longitude" to -1,
+        "Categories" to -1,
+        "PickupAt" to -1,
+        "TimeZoneId" to -1
     )
 var recipients = mutableListOf<Recipient>()
 const val DEFAULT_TIMEZONE = "America/Los_Angeles"
-const val DEFAULT_RECIPIENT_FILE = "Recipients.csv"
-const val DEFAULT_CUSTOMER_FILE = "Customers.csv"
-const val DEFAULT_OUTPUT_FILE = "MatchScores.csv"
+const val RECIPIENT_FILE = "Recipients.csv"
+const val CUSTOMER_FILE = "Customers.csv"
+const val OUTPUT_FILE = "MatchScores.csv"
+const val NUM_OF_FOOD_CATEGORIES = 8
+const val MAXIMUM_DISTANCE = 10.0
 var scores = mutableListOf<MatchScore>()
 
 fun main(args: Array<String>) {
-    var br : BufferedReader?
+    var br : BufferedReader? = null
     var line : String?
     var lineTokens : List<String>
-    var fw = FileWriter(DEFAULT_OUTPUT_FILE)
+    var fw : FileWriter? = null
     var customerIndex: Int
 
-    br = BufferedReader(FileReader(DEFAULT_RECIPIENT_FILE))
-    recipients = getRecipientsFromCSV(br)
 
-    println("Reading from $DEFAULT_CUSTOMER_FILE")
-    br = BufferedReader(FileReader(DEFAULT_CUSTOMER_FILE))
+    try {
+        println("Reading from $RECIPIENT_FILE")
+        br = BufferedReader(FileReader(RECIPIENT_FILE))
+        recipients = getRecipientsFromCSV(br)
 
-    processHeaders(br, reqCustHeaderIndices)
+        println("Reading from $CUSTOMER_FILE")
+        br = BufferedReader(FileReader(CUSTOMER_FILE))
 
-    line = br.readLine()
-    customerIndex = 0
-    println("Writing to $DEFAULT_OUTPUT_FILE")
-    fw.appendln("CustCSVIndex,TopMatchCSVIndex,TopMatchScore,2ndBestMatchCSVIndex,2ndBestMatchScore,...")
-    while(line != null) {
-        lineTokens = line.split(",")
-        val cust = Customer(
-                lineTokens[reqCustHeaderIndices["Latitude"]!!].toDouble(),
-                lineTokens[reqCustHeaderIndices["Longitude"]!!].toDouble(),
-                lineTokens[reqCustHeaderIndices["Categories"]!!].toShort(),
-                lineTokens[reqCustHeaderIndices["PickupAt"]!!],
-                lineTokens[reqCustHeaderIndices["TimeZoneId"]!!]
-        )
+        processHeaders(br, reqCustHeaderIndices)
 
-        var distance: Float
-        var foodMatchCount: Int
-        var pickupAvailable: Boolean
-        for((recipIndex, recip) in recipients.withIndex()) {
-
-            //get distance
-            distance = getDistance(cust.latitude, cust.longitude, recip.latitude, recip.longitude)
-
-            // get count of food matches
-            foodMatchCount = getFoodMatchCount(cust.categories, recip.restrictions)
-
-            // get pickup availabilities
-            pickupAvailable = getPickupAvailability(cust, recip)
-
-            // only add valid matches
-            // recipient must be less than 10 miles away
-            // recipient MUST be open at pickup time
-            // recipient must have at least one food item that can be received
-            if(distance < 10.0 && pickupAvailable && foodMatchCount > 0) {
-                scores.add(MatchScore(recipIndex, getScore(foodMatchCount, distance)))
-            }
-        }
         line = br.readLine()
+        customerIndex = 0
+        println("Writing to $OUTPUT_FILE")
+        fw = FileWriter(OUTPUT_FILE)
+        fw.appendln("CustomerCSVIndex,TopMatchCSVIndex,TopMatchScore,2ndBestMatchCSVIndex,2ndBestMatchScore,...")
+        while (line != null) {
+            lineTokens = line.split(",")
+            val cust = Customer(
+                    lineTokens[reqCustHeaderIndices["Latitude"]!!].toDouble(),      // set customer latitude
+                    lineTokens[reqCustHeaderIndices["Longitude"]!!].toDouble(),     // set customer longitude
+                    lineTokens[reqCustHeaderIndices["Categories"]!!].toShort(),     // set customer categories
+                    lineTokens[reqCustHeaderIndices["PickupAt"]!!],                 // set customer pickup time
+                    lineTokens[reqCustHeaderIndices["TimeZoneId"]!!]                // set customer timezone
+            )
 
-        // write the sorted list of scores to a row in the output file
-        fw.append("${customerIndex}")
-        for(match in scores.sortedWith(compareByDescending({ it.score }))) {
-            fw.append(",${match.csvIndex},${match.score}")
+            var distance: Float
+            var foodMatchCount: Int
+            var pickupAvailable: Boolean
+            for ((recipIndex, recip) in recipients.withIndex()) {
+
+                //get distance
+                distance = getDistance(cust.latitude, cust.longitude, recip.latitude, recip.longitude)
+
+                // get count of food matches
+                foodMatchCount = getFoodMatchCount(cust.categories, recip.restrictions)
+
+                // get pickup availabilities
+                pickupAvailable = getPickupAvailability(cust, recip)
+
+                // only adds valid matches
+                if (isValidMatch(foodMatchCount, distance, pickupAvailable)) {
+                    scores.add(MatchScore(recipIndex, getScore(foodMatchCount, distance)))
+                }
+            }
+            line = br.readLine()
+
+            writeRowToCSV(fw, customerIndex, scores)
+
+            customerIndex++     // move to next customer
+            scores.clear()
         }
-        fw.append("\n")
 
-        customerIndex++     // move to next customer
-        scores.clear()
+        fw.close()
+        br.close()
+        println("Done")
     }
-
-    fw.close()
-    br.close()
-    println("Done")
+    catch(e: NumberFormatException) {
+        println("ERROR: Could not parse CSV file correctly")
+        println(e.message)
+    }
+    catch(e: FileNotFoundException) {
+        println("ERROR: File not found")
+        println(e.message)
+    }
+    catch(e: IOException) {
+        println("ERROR: Problem with IO")
+        println(e.message)
+    }
+    finally {
+        fw?.close()
+        br?.close()
+    }
 }
 
+// returns a list of Recipients obtained form the CSV
 fun getRecipientsFromCSV(br: BufferedReader): MutableList<Recipient> {
     val recipList = mutableListOf<Recipient>()
     var line: String?
     var lineTokens: List<String>
-
-    println("Reading from $DEFAULT_RECIPIENT_FILE")
 
     processHeaders(br, reqRecipHeaderIndices)
 
@@ -116,10 +128,10 @@ fun getRecipientsFromCSV(br: BufferedReader): MutableList<Recipient> {
     while(line != null) {
         lineTokens = line.split(",")
         recipList.add(Recipient(
-                lineTokens[reqRecipHeaderIndices["Latitude"]!!].toDouble(),         // set latitude
-                lineTokens[reqRecipHeaderIndices["Longitude"]!!].toDouble(),        // set longitude
-                lineTokens[reqRecipHeaderIndices["Restrictions"]!!].toShort(),      // set restrictions
-                arrayOf(                                                                // sets the weekday values in
+                lineTokens[reqRecipHeaderIndices["Latitude"]!!].toDouble(),         // set recipient latitude
+                lineTokens[reqRecipHeaderIndices["Longitude"]!!].toDouble(),        // set recipient longitude
+                lineTokens[reqRecipHeaderIndices["Restrictions"]!!].toShort(),      // set recipient restrictions
+                arrayOf(                                                            // sets the weekday values in
                         lineTokens[reqRecipHeaderIndices["Monday"]!!].toInt(),      // weekday array
                         lineTokens[reqRecipHeaderIndices["Tuesday"]!!].toInt(),
                         lineTokens[reqRecipHeaderIndices["Wednesday"]!!].toInt(),
@@ -135,16 +147,19 @@ fun getRecipientsFromCSV(br: BufferedReader): MutableList<Recipient> {
     return recipList
 }
 
+// aggregates functions involved with processing the CSV headers
 fun processHeaders(br: BufferedReader, reqHeaderIndices: MutableMap<String, Int>) {
     // read header
     val line = br.readLine()
     val lineTokens = line.split(",")
     if(!hasRequiredHeader(lineTokens, reqHeaderIndices)) { // ensures all necessary headers are included
-        // handle issue
+        throw NumberFormatException("Missing one or more required headers")
     }
+    hasRequiredHeader(lineTokens, reqHeaderIndices)
     setIndices(lineTokens, reqHeaderIndices) // sets the appropriate CSV header indices
 }
 
+// returns true if all of the required headers are found on the CSV file
 fun hasRequiredHeader(headerTokens: List<String>, reqHeaders: MutableMap<String, Int>): Boolean {
     for(header in reqHeaders.keys) {
         if(header !in headerTokens)
@@ -153,12 +168,21 @@ fun hasRequiredHeader(headerTokens: List<String>, reqHeaders: MutableMap<String,
     return true
 }
 
+// write the sorted list of scores to a row in the output file
+fun writeRowToCSV(fw: FileWriter, customerIndex: Int, scores: MutableList<MatchScore>) {
+    fw.append("${customerIndex}")
+    for(match in scores.sortedWith(compareByDescending({ it.score }))) {
+        fw.append(",${match.csvIndex},${match.score}")
+    }
+    fw.append("\n")
+}
+
+// sets the indices of the required header according to order on the CSV file
 fun setIndices(headerTokens: List<String>, reqHeaderMap: MutableMap<String, Int>) {
     for(key in reqHeaderMap.keys) {
         reqHeaderMap[key] = headerTokens.indexOf(key)
     }
 }
-
 
 // finds the distance between two coordinates, returns in miles
 // adapted from https://dzone.com/articles/distance-calculation-using-3
@@ -186,33 +210,41 @@ fun rad2deg(rad: Double): Double {
 
 // returns the number of food items that match for a customer and recipient
 fun getFoodMatchCount(custCategories: Short, recipRestrictions: Short): Int {
-    var count: Int = 0
+    var count = 0
     val categories = custCategories.toInt()
     val restrictions = recipRestrictions.toInt()
 
-    (0..7).forEach { i ->
-        if(testBit(categories, i) and !(testBit(restrictions, i))) {
+    (0..(NUM_OF_FOOD_CATEGORIES - 1)).forEach { i ->
+        if(checkBit(categories, i) and !(checkBit(restrictions, i))) {
             count++
         }
     }
     return count
 }
 
-// tests the Integer int's bit at position pos, returns true if set, false if not
-fun testBit(int: Int, pos: Int): Boolean {
-    return int and (1 shl pos) !== 0
+// checks the Integer int's bit at position pos, returns true if set, false if not
+fun checkBit(int: Int, pos: Int): Boolean {
+    if(pos < 0)
+        return false
+    return int and (1 shl pos) != 0
 }
 
-
-// DAyofWeek indices are off by one
-// may need to catch array out of bounds
+// determine if recipient is open at pickup time
 fun getPickupAvailability(cust: Customer, recip: Recipient): Boolean {
     val pickupTime = LocalDateTime.parse(cust.pickupAt.substring(0, 19))
     val custZoneId = ZoneId.of(cust.timeZoneId)
     val defaultZoneID = ZoneId.of(DEFAULT_TIMEZONE)
     val zonedDateTime: ZonedDateTime = pickupTime.atZone(custZoneId)
     val adjustedDateTime:  ZonedDateTime =zonedDateTime.withZoneSameInstant(defaultZoneID)
-    return testBit(recip.weekdays[adjustedDateTime.dayOfWeek.value - 1], adjustedDateTime.hour - 8)
+    return checkBit(recip.weekdays[adjustedDateTime.dayOfWeek.value - 1], adjustedDateTime.hour - 8)
+}
+
+// determines if valid matches
+// recipient must be less than 10 miles away
+// recipient MUST be open at pickup time
+// recipient must have at least one food item that can be received
+fun isValidMatch(foodMatchCount: Int, distance: Float, availability:Boolean): Boolean {
+    return foodMatchCount > 0 && distance < MAXIMUM_DISTANCE && availability
 }
 
 // Score prioritizes number of matching food items over distance, so foodMatchCount is weighted * 10
